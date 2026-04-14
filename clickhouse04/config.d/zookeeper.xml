@@ -1,7 +1,7 @@
 <clickhouse>
     <zookeeper>
         <node>
-            <host>clickhouse01</host> <port>9181</port>
+            <host><EC2_PRIVATE_IP_1></host> <port>9181</port>
         </node>
     </zookeeper>
 </clickhouse>
