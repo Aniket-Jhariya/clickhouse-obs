@@ -1,0 +1,18 @@
+<yandex>
+    <users>
+        <default>
+            <password></password>
+            <networks><ip>::/0</ip></networks>
+            <profile>default</profile>
+            <quota>default</quota>
+        </default>
+        <aniket>
+            <password_sha256_hex>dfac63f15143a4856c2daf4ad626272b1d634ddd1f56c7c6d3e856a6d830786d</password_sha256_hex>
+            <networks><ip>::/0</ip></networks>
+            <profile>default</profile>
+            <quota>default</quota>
+        </aniket>
+    </users>
+    <profiles><default></default></profiles>
+    <quotas><default><interval><duration>3600</duration></interval></default></quotas>
+</yandex>

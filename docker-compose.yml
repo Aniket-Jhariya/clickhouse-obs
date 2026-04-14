@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  clickhouse01:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse01
+    hostname: clickhouse01
+    ports:
+      - "9001:9000"
+      - "8123:8123"
+      - "9181:9181" # ClickHouse Keeper port
+    volumes:
+      # Users & Access
+      - ./clickhouse01/users.xml:/etc/clickhouse-server/users.xml
+      # Supplemental Configs - All paths now point to the config.d subfolder
+      - ./clickhouse01/config.d/keeper_config.xml:/etc/clickhouse-server/config.d/keeper_config.xml
+      - ./clickhouse01/config.d/macros.xml:/etc/clickhouse-server/config.d/macros.xml
+      - ./clickhouse01/config.d/network.xml:/etc/clickhouse-server/config.d/network.xml
+      - ./clickhouse01/config.d/zookeeper.xml:/etc/clickhouse-server/config.d/zookeeper.xml
+      # Data Persistence
+      - clickhouse01_data:/var/lib/clickhouse
+
+  clickhouse02:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse02
+    hostname: clickhouse02
+    ports:
+      - "9002:9000"
+      - "8124:8123"
+    volumes:
+      # Users & Access
+      - ./clickhouse02/users.xml:/etc/clickhouse-server/users.xml
+      # Supplemental Configs
+      - ./clickhouse02/config.d/macros.xml:/etc/clickhouse-server/config.d/macros.xml
+      - ./clickhouse02/config.d/network.xml:/etc/clickhouse-server/config.d/network.xml
+      # Data Persistence
+      - clickhouse02_data:/var/lib/clickhouse
+      - ./clickhouse02/config.d/zookeeper.xml:/etc/clickhouse-server/config.d/zookeeper.xml
+
+  clickhouse03:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse03
+    hostname: clickhouse03
+    ports:
+      - "9003:9000"
+      - "8125:8123"
+    volumes:
+      - ./clickhouse03/users.xml:/etc/clickhouse-server/users.xml
+      - ./clickhouse03/config.d/macros.xml:/etc/clickhouse-server/config.d/macros.xml
+      - ./clickhouse03/config.d/network.xml:/etc/clickhouse-server/config.d/network.xml
+      - ./clickhouse03/config.d/zookeeper.xml:/etc/clickhouse-server/config.d/zookeeper.xml
+      - clickhouse03_data:/var/lib/clickhouse
+
+  clickhouse04:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse04
+    hostname: clickhouse04
+    ports:
+      - "9004:9000"
+      - "8126:8123"
+    volumes:
+      - ./clickhouse04/users.xml:/etc/clickhouse-server/users.xml
+      - ./clickhouse04/config.d/macros.xml:/etc/clickhouse-server/config.d/macros.xml
+      - ./clickhouse04/config.d/network.xml:/etc/clickhouse-server/config.d/network.xml
+      - ./clickhouse04/config.d/zookeeper.xml:/etc/clickhouse-server/config.d/zookeeper.xml
+      - clickhouse04_data:/var/lib/clickhouse
+
+volumes:
+  clickhouse01_data:
+  clickhouse02_data:
+  clickhouse03_data:
+  clickhouse04_data:
