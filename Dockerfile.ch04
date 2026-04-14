@@ -1,0 +1,13 @@
+FROM clickhouse/clickhouse-server:latest
+
+# Copy users configuration
+COPY clickhouse04/users.xml /etc/clickhouse-server/users.xml
+
+# Copy all node-specific configurations to config.d
+COPY clickhouse04/config.d/ /etc/clickhouse-server/config.d/
+
+# Ensure proper permissions
+RUN chown -R clickhouse:clickhouse /etc/clickhouse-server/
+
+# Expose ports
+EXPOSE 9000 8123

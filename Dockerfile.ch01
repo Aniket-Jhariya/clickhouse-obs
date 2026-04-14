@@ -1,0 +1,14 @@
+FROM clickhouse/clickhouse-server:latest
+
+# Copy users configuration
+COPY clickhouse01/users.xml /etc/clickhouse-server/users.xml
+
+# Copy all node-specific configurations to config.d
+COPY clickhouse01/config.d/ /etc/clickhouse-server/config.d/
+
+# Ensure proper permissions
+RUN chown -R clickhouse:clickhouse /etc/clickhouse-server/
+
+# Expose ports
+# 9000: Native, 8123: HTTP, 9181: Keeper, 9234: Raft
+EXPOSE 9000 8123 9181 9234
