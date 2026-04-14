@@ -10,7 +10,7 @@
             <raft_logs_level>information</raft_logs_level>
         </coordination_settings>
         <raft_configuration>
-            <server id="1" hostname="<EC2_PRIVATE_IP_1>" port="9234"/>
+            <server id="1" hostname="172.31.8.251" port="9234"/>
         </raft_configuration>
     </keeper_server>
 </clickhouse>
