@@ -35,41 +35,59 @@ docker build -f Dockerfile.ch04 -t clickhouse-node4 .
 ```
 
 ## Step 2: Run the Containers
-Since the configuration files use hostnames (`clickhouse01`, `clickhouse02`, etc.), you must map these hostnames to the **Private IPs** of your EC2 instances using the `--add-host` flag.
+Run each command on its respective EC2 instance. All nodes must have the host-to-IP mappings so they can find each other.
 
-### Example:
-Assume your EC2 Private IPs are:
-- Node 1: `10.0.0.10`
-- Node 2: `10.0.0.20`
-- Node 3: `10.0.0.30`
-- Node 4: `10.0.0.40`
-
-**Run on EC2 Instance 1 (Node 1):**
+**Run on EC2 Instance 1 (Node 1 - IP 172.31.8.251):**
 ```bash
 docker run -d --name clickhouse \
   --restart always \
   -v clickhouse_data:/var/lib/clickhouse \
-  --add-host clickhouse01:10.0.0.10 \
-  --add-host clickhouse02:10.0.0.20 \
-  --add-host clickhouse03:10.0.0.30 \
-  --add-host clickhouse04:10.0.0.40 \
+  --add-host clickhouse01:172.31.8.251 \
+  --add-host clickhouse02:172.31.2.13 \
+  --add-host clickhouse03:172.31.4.5 \
+  --add-host clickhouse04:172.31.14.89 \
   -p 9000:9000 -p 8123:8123 -p 9181:9181 -p 9234:9234 \
   clickhouse-node1
 ```
 
-**Run on EC2 Instance 2 (Node 2):**
+**Run on EC2 Instance 2 (Node 2 - IP 172.31.2.13):**
 ```bash
 docker run -d --name clickhouse \
   --restart always \
   -v clickhouse_data:/var/lib/clickhouse \
-  --add-host clickhouse01:10.0.0.10 \
-  --add-host clickhouse02:10.0.0.20 \
-  --add-host clickhouse03:10.0.0.30 \
-  --add-host clickhouse04:10.0.0.40 \
-  -p 9000:9000 -p 8123:8123 \
+  --add-host clickhouse01:172.31.8.251 \
+  --add-host clickhouse02:172.31.2.13 \
+  --add-host clickhouse03:172.31.4.5 \
+  --add-host clickhouse04:172.31.14.89 \
+  -p 9000:9000 -p 8123:8123 -p 9181:9181 -p 9234:9234 \
   clickhouse-node2
 ```
-*(Repeat for Node 3 and Node 4 using their respective images)*
+
+**Run on EC2 Instance 3 (Node 3 - IP 172.31.4.5):**
+```bash
+docker run -d --name clickhouse \
+  --restart always \
+  -v clickhouse_data:/var/lib/clickhouse \
+  --add-host clickhouse01:172.31.8.251 \
+  --add-host clickhouse02:172.31.2.13 \
+  --add-host clickhouse03:172.31.4.5 \
+  --add-host clickhouse04:172.31.14.89 \
+  -p 9000:9000 -p 8123:8123 -p 9181:9181 -p 9234:9234 \
+  clickhouse-node3
+```
+
+**Run on EC2 Instance 4 (Node 4 - IP 172.31.14.89):**
+```bash
+docker run -d --name clickhouse \
+  --restart always \
+  -v clickhouse_data:/var/lib/clickhouse \
+  --add-host clickhouse01:172.31.8.251 \
+  --add-host clickhouse02:172.31.2.13 \
+  --add-host clickhouse03:172.31.4.5 \
+  --add-host clickhouse04:172.31.14.89 \
+  -p 9000:9000 -p 8123:8123 -p 9181:9181 -p 9234:9234 \
+  clickhouse-node4
+```
 
 ## Important Notes
 - **Keeper Persistence:** Ensure you use volumes (`-v clickhouse_data:/var/lib/clickhouse`) to persist your data and Keeper logs.

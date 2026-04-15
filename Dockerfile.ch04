@@ -10,4 +10,4 @@ COPY clickhouse04/config.d/ /etc/clickhouse-server/config.d/
 RUN chown -R clickhouse:clickhouse /etc/clickhouse-server/
 
 # Expose ports
-EXPOSE 9000 8123
+EXPOSE 9000 8123 9181 9234
