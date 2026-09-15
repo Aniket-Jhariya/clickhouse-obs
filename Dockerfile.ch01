@@ -11,4 +11,4 @@ RUN chown -R clickhouse:clickhouse /etc/clickhouse-server/
 
 # Expose ports
 # 9000: Native, 8123: HTTP, 9181: Keeper, 9234: Raft
-EXPOSE 9000 8123 9181 9234
+EXPOSE 9000 8123 9181 9234 9009

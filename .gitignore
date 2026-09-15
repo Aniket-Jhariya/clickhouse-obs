@@ -1,0 +1,8 @@
+# Real storage policy contains live S3 credentials - NEVER commit it.
+# Create it from storage_policy.xml.template before building an image.
+**/config.d/storage_policy.xml
+
+# Config backups produced during maintenance
+*.bak
+*.bak-*
+*.old

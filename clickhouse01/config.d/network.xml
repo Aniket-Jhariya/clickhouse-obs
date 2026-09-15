@@ -1,4 +1,10 @@
 <clickhouse>
+    <!-- Cluster hosts MUST be hostnames, not EC2 IPs.
+         Under Docker bridge networking a container cannot recognise its own
+         EC2 IP as a local address, so Distributed DDL (ON CLUSTER) silently
+         refuses every task with "There is no a local address in host list".
+         Each container resolves its own name to its container IP (a local
+         interface) and every other name to that peer's EC2 IP. -->
     <remote_servers>
         <cross_replicated_cluster>
             <shard>
