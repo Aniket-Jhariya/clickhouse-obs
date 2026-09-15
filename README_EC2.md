@@ -43,48 +43,74 @@ URL only. The two mechanisms are independent.
 
 ---
 
-## Prepare credentials (required before building)
+## Deployment (two different styles - do not mix them up)
 
-`storage_policy.xml` is gitignored because it holds live S3 keys. On each node:
+**Node 1** runs the **stock upstream image** with every config file bind-mounted
+from this repo. Nothing is baked in; editing a file here changes node 1 directly.
 
-```bash
-cd clickhouseNN/config.d
-cp storage_policy.xml.template storage_policy.xml
-```
+**Nodes 2-4** run **locally built images** (`clickhouse-node2/3/4`) with config
+copied in at build time by `Dockerfile.chNN`. Editing a file here has no effect
+on them until the image is rebuilt AND the container recreated.
 
-The template reads credentials from the environment, so pass them at run time
-(see `-e` flags below). Never commit a copy containing literal keys.
-
-## Build
+### Node 1 (172.31.8.251) - stock image + bind mounts
 
 ```bash
-# on node N
-docker build -f Dockerfile.chNN -t clickhouse-nodeN .
-```
-
-## Run
-
-Note `--hostname`, the four `--add-host` entries, and the S3 env vars.
-
-```bash
-# ---- Node 1 (172.31.8.251) ----
-docker run -d --name clickhouse01 \
-  --restart always \
+docker run -d \
+  --name clickhouse01 \
   --hostname clickhouse01 \
+  --restart unless-stopped \
+  --add-host clickhouse01:172.31.8.251 \
+  --add-host clickhouse02:172.31.2.13 \
+  --add-host clickhouse03:172.31.4.5 \
+  --add-host clickhouse04:172.31.14.89 \
+  -e TZ=UTC \
+  -e CLICKHOUSE_CONFIG=/etc/clickhouse-server/config.xml \
   -v clickhouse_data:/var/lib/clickhouse \
+  -v /home/ubuntu/clickhouse-obs/clickhouse01/users.xml:/etc/clickhouse-server/users.xml \
+  -v /home/ubuntu/clickhouse-obs/clickhouse01/config.d/macros.xml:/etc/clickhouse-server/config.d/macros.xml \
+  -v /home/ubuntu/clickhouse-obs/clickhouse01/config.d/network.xml:/etc/clickhouse-server/config.d/network.xml \
+  -v /home/ubuntu/clickhouse-obs/clickhouse01/config.d/storage_policy.xml:/etc/clickhouse-server/config.d/storage_policy.xml \
+  -v /home/ubuntu/clickhouse-obs/clickhouse01/config.d/zookeeper.xml:/etc/clickhouse-server/config.d/zookeeper.xml \
+  -v /home/ubuntu/clickhouse-obs/clickhouse01/config.d/interserver.xml:/etc/clickhouse-server/config.d/interserver.xml \
+  -v /home/ubuntu/clickhouse-obs/clickhouse01/config.d/keeper_config.xml:/etc/clickhouse-server/config.d/keeper_config.xml \
+  -p 8123:8123 -p 9000:9000 -p 9009:9009 -p 9181:9181 \
+  clickhouse/clickhouse-server:latest
+```
+
+`clickhouse_data` is an external named volume - it MUST already exist, and it
+carries all table data. Never pass `-v` to `docker rm`.
+
+### Nodes 2-4 - build then run
+
+```bash
+# N = 2, 3 or 4
+cd /home/ubuntu/clickhouse-obs
+cp clickhouse0N/config.d/storage_policy.xml.template clickhouse0N/config.d/storage_policy.xml
+docker build -f Dockerfile.chN -t clickhouse-nodeN .
+
+docker run -d \
+  --name clickhouse \
+  --hostname clickhouse0N \
+  --restart unless-stopped \
   --add-host clickhouse01:172.31.8.251 \
   --add-host clickhouse02:172.31.2.13 \
   --add-host clickhouse03:172.31.4.5 \
   --add-host clickhouse04:172.31.14.89 \
   -e S3_ACCESS_KEY_ID="$S3_ACCESS_KEY_ID" \
   -e S3_SECRET_ACCESS_KEY="$S3_SECRET_ACCESS_KEY" \
-  -p 9000:9000 -p 8123:8123 -p 9009:9009 \
-  clickhouse-node1
+  -v clickhouse_data:/var/lib/clickhouse \
+  -p 8123:8123 -p 9000:9000 -p 9009:9009 \
+  clickhouse-nodeN
 ```
 
-Repeat for nodes 2-4, changing `--name`, `--hostname`, and the image tag.
-The `--add-host` block is identical on every node; `--hostname` makes Docker add
-the self-mapping that Distributed DDL depends on.
+> **The images currently on nodes 2-4 are stale.** They were built before the
+> external Keeper ensemble and the S3 storage policy existed, so they still
+> contain a `zookeeper.xml` pointing at `clickhouse01:9181` and no
+> `storage_policy.xml`. Recreating one of those containers from its existing
+> image would attach it to the wrong Keeper and leave every table that uses
+> `hot_to_cold_policy` unable to load. Rebuild from this repo first.
+
+`--hostname` is mandatory on every node - see the Distributed DDL section above.
 
 ## Verify after any rebuild or recreate
 
@@ -127,6 +153,6 @@ ReplicatedMergeTree path arguments, which it assigns as
 
 - `clickhouse01/config.d/keeper_config.xml` configures an embedded single-node
   Keeper on node 1 that **nothing uses** (all nodes talk to the external
-  ensemble). It is retained only because node 1 bind-mounts it. Safe to drop
-  when node 1 is next rebuilt.
+  ensemble). It is retained deliberately: node 1 bind-mounts it, and dropping it
+  would change which ports node 1 binds. Safe to remove in a separate change.
 - `memory_tweak.xml` is present on nodes 2-4 but not node 1.
